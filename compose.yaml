@@ -1,0 +1,52 @@
+#-----------------------------------------------------------------------------------------------
+# ! Este archivo docker compose es apto para entornos locales o de desarrollo, no de producción. 
+#-----------------------------------------------------------------------------------------------
+
+
+# Nombre del proyecto
+name: docker-reverse-proxy
+
+# Servicios Docker.
+services:
+  # Contenedor de Caddy
+  caddy:
+    # https://hub.docker.com/_/caddy
+    image: caddy:alpine
+    container_name: ${CONTAINER_NAME:-reverse_proxy}
+    restart: unless-stopped
+    networks:
+      - reverse_proxy
+    # Mapea los puertos expuestos en las aplicaciones a los puertos del host o máquina anfitrión
+    ports:
+      - 80:80
+      - 443:443
+      - ${ADMIN_API_PORT:-2019}:2019
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    # Archivo de configuración de Caddy
+      - $PWD/config/Caddyfile:/etc/caddy/Caddyfile
+    # Autoridad de certificación (CA) de Caddy
+      - $PWD/certificate-authority:/data/caddy/pki/authorities/local
+
+  # Aplicación web de prueba con nginx
+  website:
+    image: "nginxdemos/hello"
+    container_name: app_demo
+    # Correspondencia entre puerto utilizado por el contenedor y el accesible desde el anfitrión
+    networks:
+      - reverse_proxy
+
+# Redes de Docker
+networks:
+  reverse_proxy:
+    external: true
+      
+# Volúmenes de Docker
+volumes:
+  caddy_data:
+    driver: "local"
+    name: "${CONTAINER_VOLUME_DATA_NAME:-reverse_proxy_data}"
+  caddy_config:
+    driver: "local"
+    name: "${CONTAINER_VOLUME_CONFIG_NAME:-reverse_proxy_config}"
