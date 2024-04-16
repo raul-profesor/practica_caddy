@@ -33,7 +33,6 @@ services:
   website:
     image: "nginxdemos/hello"
     container_name: app_demo
-    # Correspondencia entre puerto utilizado por el contenedor y el accesible desde el anfitrión
     networks:
       - reverse_proxy
 
